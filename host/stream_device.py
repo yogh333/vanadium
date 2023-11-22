@@ -12,9 +12,6 @@ from merkletree import Entry, MerkleTree
 from streamer import StreamerABC, setup_logging
 
 
-logger = logging.getLogger()
-
-
 class Page:
     def __init__(self, data: bytes, mac: bytes, iv=0, read_only=False) -> None:
         self.read_only = False
