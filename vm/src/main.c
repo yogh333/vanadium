@@ -62,8 +62,10 @@ static void app_main_(void)
     app_running = false;
 
     while (1) {
+        PRINTF("Start RISC-V VM App \n");
         ret = io_exchange(CHANNEL_APDU, tx);
 
+        PRINTF("APDU RECEIVED \n");
         if (!apdu_parser(&cmd, G_io_apdu_buffer, ret)) {
             G_io_apdu_buffer[0] = 0x63;
             G_io_apdu_buffer[1] = 0x63;
@@ -72,20 +74,23 @@ static void app_main_(void)
         }
 
         if (cmd.cla == CLA_GENERAL) {
+            PRINTF("GENERAL APDU PROCESSING \n");
             tx = handle_general_apdu(cmd.ins, &G_io_apdu_buffer[OFFSET_CDATA], cmd.lc);
             continue;
         }
 
+        PRINTF("STREAM INIT \n");
         if (!stream_init_app(&G_io_apdu_buffer[OFFSET_CDATA], cmd.lc)) {
             G_io_apdu_buffer[0] = 0x62;
             G_io_apdu_buffer[1] = 0x62;
             tx = 2;
             continue;
         }
-
+        PRINTF("START APP STREAMING \n");
         app_running = true;
         stream_run_app();
         app_running = false;
+        PRINTF("STOP APP STREAMING \n");
 
         G_io_apdu_buffer[0] = 0x90;
         G_io_apdu_buffer[1] = 0x00;

@@ -1,4 +1,3 @@
-import logging
 import zipfile
 
 from construct import Bytes, Int8ul, Int16ul, Int32ul, Struct
@@ -195,6 +194,7 @@ class DeviceStream:
         if not self.initialized:
             apdu = self.init_app()
         else:
+            logger.debug("RESUME APP")
             # resume execution after previous exchange call
             apdu = self.client.exchange(0x00, data=b"")
 
@@ -202,10 +202,13 @@ class DeviceStream:
         while True:
             logger.debug(f"[<] {apdu.status:#06x} {apdu.data[:8].hex()}...")
             if apdu.status == ApduCmd.REQUEST_PAGE:
+                logger.debug("REQUEST_PAGE")
                 apdu = self.handle_read_access(apdu.data)
             elif apdu.status == ApduCmd.COMMIT_PAGE:
+                logger.debug("COMMIT_PAGE")
                 apdu = self.handle_write_access(apdu.data)
             elif apdu.status == ApduCmd.SEND_BUFFER:
+                logger.debug("SEND_BUFFER")
                 stop = self.handle_send_buffer(apdu.data)
                 if stop:
                     logger.info(f"received buffer: {self.send_buffer!r} (len: {len(self.send_buffer)})")
@@ -216,6 +219,7 @@ class DeviceStream:
                 else:
                     apdu = self.client.exchange(0x00, data=b"")
             elif apdu.status == ApduCmd.RECV_BUFFER:
+                logger.debug("RECV_BUFFER")
                 if exit_app:
                     logger.info("exiting app")
                     self.client.exchange(0x00, p1=0x02, data=b"")
